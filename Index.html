@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Digitalt klassrum</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc, #eef2ff);
+            color: #172033;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        button,
+        input,
+        textarea {
+            font-family: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        /* SIDHUVUD */
+
+        .sidhuvud {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            min-height: 95px;
+            padding: 13px 25px;
+            border-top: 7px solid #9333ea;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+        }
+
+        .klassinformation {
+            min-width: 0;
+        }
+
+        #klassnamn {
+            display: inline-block;
+            max-width: 700px;
+            margin: 0;
+            padding: 5px 8px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            outline: none;
+            font-size: clamp(27px, 3.4vw, 48px);
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        #klassnamn:hover {
+            border-color: #d8b4fe;
+        }
+
+        #klassnamn:focus {
+            border-color: #9333ea;
+            background-color: #faf5ff;
+        }
+
+        .klasshjalp {
+            margin: 5px 0 0 8px;
+            color: #64748b;
+            font-size: 13px;
+            font-style: italic;
+        }
+
+        .digital-klocka {
+            flex-shrink: 0;
+            text-align: right;
+        }
+
+        #aktuellTid {
+            font-family: "Courier New", monospace;
+            font-size: clamp(24px, 3vw, 39px);
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .klocktext {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* VERKTYGSMENY */
+
+        .verktygsmeny {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 58px;
+            padding: 8px 15px;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .menyknapp {
+            padding: 9px 15px;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            background-color: white;
+            color: #334155;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .menyknapp:hover {
+            background-color: #f1f5f9;
+        }
+
+        .menyknapp.aktiv {
+            border-color: #2563eb;
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        #visaAlla {
+            border-color: #7c3aed;
+            background-color: #7c3aed;
+            color: white;
+        }
+
+        #doljAlla {
+            border-color: #64748b;
+            background-color: #64748b;
+            color: white;
+        }
+
+        /* DASHBOARD */
+
+        #dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(270px, 1fr));
+            gap: 13px;
+            height: calc(100vh - 153px);
+            padding: 13px;
+        }
+
+        #dashboard.ett-verktyg {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        #dashboard.tva-verktyg {
+            grid-template-columns: repeat(2, minmax(300px, 1fr));
+        }
+
+        #dashboard.tre-verktyg {
+            grid-template-columns: repeat(3, minmax(270px, 1fr));
+        }
+
+        .panel {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 0;
+            padding: 16px;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.96);
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(51, 65, 85, 0.12);
+        }
+
+        .panel.dold {
+            display: none;
+        }
+
+        .panel.maximerad {
+            position: fixed;
+            inset: 12px;
+            z-index: 10000;
+            width: auto;
+            height: auto;
+            padding: 25px;
+            overflow: auto;
+            border: 3px solid #2563eb;
+            box-shadow: 0 20px 70px rgba(15, 23, 42, 0.35);
+        }
+
+        body.har-maximerad {
+            overflow: hidden;
+        }
+
+        body.har-maximerad::before {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            content: "";
+            background-color: rgba(15, 23, 42, 0.55);
+        }
+
+        .panelhuvud {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .panelrubrik {
+            margin: 0;
+            font-size: 21px;
+        }
+
+        .panelkontroller {
+            display: flex;
+            gap: 5px;
+        }
+
+        .panelknapp {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background-color: white;
+            color: #334155;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .panelknapp:hover {
+            background-color: #f1f5f9;
+        }
+
+        .panelknapp.dolj {
+            color: #dc2626;
+        }
+
+        /* TIMER */
+
+        #timerPanel {
+            align-items: center;
+        }
+
+        #timerPanel .panelhuvud {
+            width: 100%;
+        }
+
+        .minutval {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .minutval label {
+            font-weight: bold;
+        }
+
+        #minuter {
+            width: 78px;
+            padding: 8px;
+            border: 1px solid #94a3b8;
+            border-radius: 8px;
+            font-size: 17px;
+            text-align: center;
+        }
+
+        #timercirkel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: min(30vh, 245px);
+            height: min(30vh, 245px);
+            margin: 14px auto;
+            flex-shrink: 0;
+            border: 4px solid #e2e8f0;
+            border-radius: 50%;
+            background: conic-gradient(
+                #ef4444 0deg,
+                #ef4444 360deg,
+                white 360deg,
+                white 360deg
+            );
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.18);
+        }
+
+        #timercirkelMitten {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 66%;
+            height: 66%;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 3px 15px rgba(15, 23, 42, 0.15);
+        }
+
+        #tid {
+            font-family: "Courier New", monospace;
+            font-size: clamp(28px, 3vw, 43px);
+            font-weight: bold;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -2px;
+        }
+
+        .tidstext {
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .snabbknappar {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .snabbknappar button {
+            padding: 6px 9px;
+            border: none;
+            border-radius: 7px;
+            background-color: #eff6ff;
+            color: #2563eb;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .timerknappar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .timerknappar button {
+            min-height: 42px;
+            padding: 9px;
+            border: none;
+            border-radius: 9px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        #starta {
+            grid-column: 1 / -1;
+            background-color: #22c55e;
+            font-size: 16px;
+        }
+
+        #pausa {
+            background-color: #ef4444;
+        }
+
+        #aterstall {
+            background-color: #64748b;
+        }
+
+        .timerknappar button:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+
+        #timermeddelande {
+            min-height: 18px;
+            margin: 9px 0 0;
+            color: #64748b;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        /* LEKTIONSSTRUKTUR */
+
+        #whiteboardPanel {
+            background-color: #f8fafc;
+        }
+
+        .whiteboardkontroller {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .sluttidsruta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 9px;
+            background-color: #ecfeff;
+            border: 2px solid #06b6d4;
+            border-radius: 9px;
+        }
+
+        .sluttidsruta label {
+            color: #155e75;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        #sluttid {
+            width: 82px;
+            padding: 6px;
+            border: 1px solid #67e8f9;
+            border-radius: 6px;
+            outline: none;
+            background-color: white;
+            font-size: 17px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        #sluttid:focus {
+            border-color: #0891b2;
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.16);
+        }
+
+        .nytt-moment {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 7px;
+        }
+
+        #nyttMoment {
+            min-width: 0;
+            padding: 11px 13px;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            outline: none;
+            background-color: white;
+            color: #172033;
+            font-size: 16px;
+        }
+
+        #nyttMoment:focus {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.14);
+        }
+
+        #laggTillMoment {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 10px;
+            background-color: #2563eb;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        #laggTillMoment:hover {
+            background-color: #1d4ed8;
+        }
+
+        .momenthjalp {
+            margin: 0 0 11px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        #lektionsmoment {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            gap: 9px;
+            min-height: 0;
+            padding-right: 4px;
+            overflow-y: auto;
+        }
+
+        .moment-rad {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 11px;
+            align-items: center;
+            min-height: 57px;
+            padding: 10px 12px;
+            background-color: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            transition:
+                background-color 0.2s,
+                border-color 0.2s;
+        }
+
+        .moment-rad:hover {
+            border-color: #86efac;
+        }
+
+        .moment-checkbox {
+            width: 27px;
+            height: 27px;
+            margin: 0;
+            accent-color: #22c55e;
+            cursor: pointer;
+        }
+
+        .moment-text {
+            min-width: 0;
+            overflow-wrap: anywhere;
+            color: #172033;
+            font-size: clamp(17px, 1.6vw, 23px);
+            font-weight: 600;
+            line-height: 1.25;
+            cursor: pointer;
+        }
+
+        .moment-rad.klar {
+            background-color: #f0fdf4;
+            border-color: #86efac;
+        }
+
+        .moment-rad.klar .moment-text {
+            color: #64748b;
+            text-decoration: line-through;
+        }
+
+        .ta-bort-moment {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            background-color: #fff1f2;
+            color: #dc2626;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .ta-bort-moment:hover {
+            background-color: #fee2e2;
+        }
+
+        .tom-momentlista {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            min-height: 130px;
+            padding: 25px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 14px;
+            color: #94a3b8;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .lektionsknappar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        #avmarkeraMoment,
+        #rensaMoment {
+            padding: 9px 12px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        #avmarkeraMoment {
+            background-color: #0f766e;
+        }
+
+        #rensaMoment {
+            background-color: #64748b;
+        }
+
+        #whiteboardPanel.maximerad .moment-rad {
+            min-height: 72px;
+            padding: 14px 17px;
+        }
+
+        #whiteboardPanel.maximerad .moment-text {
+            font-size: clamp(22px, 2.3vw, 34px);
+        }
+
+        #whiteboardPanel.maximerad .moment-checkbox {
+            width: 34px;
+            height: 34px;
+        }
+
+        /* GRUPPGENERATOR */
+
+        #namnlista {
+            width: 100%;
+            height: 18vh;
+            min-height: 100px;
+            padding: 11px;
+            resize: none;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            outline: none;
+            background-color: white;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        #namnlista:focus {
+            border-color: #9333ea;
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.13);
+        }
+
+        .gruppval {
+            margin-top: 9px;
+            padding: 9px;
+            background-color: #faf5ff;
+            border-radius: 10px;
+        }
+
+        .radioval {
+            display: block;
+            margin: 5px 0;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .antalrad {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 7px;
+        }
+
+        .antalrad label {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        #gruppantal {
+            width: 70px;
+            padding: 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        #slumpa {
+            width: 100%;
+            margin-top: 9px;
+            padding: 11px;
+            border: none;
+            border-radius: 9px;
+            background: linear-gradient(90deg, #7c3aed, #a21caf);
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        #gruppmeddelande {
+            min-height: 16px;
+            margin: 6px 0;
+            color: #64748b;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        #gruppresultat {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+            gap: 7px;
+            flex: 1;
+            min-height: 0;
+            padding-right: 3px;
+            overflow-y: auto;
+        }
+
+        .grupp {
+            padding: 9px;
+            background-color: #faf5ff;
+            border-left: 4px solid #9333ea;
+            border-radius: 8px;
+        }
+
+        .grupp h3 {
+            margin: 0 0 6px;
+            color: #6b21a8;
+            font-size: 14px;
+        }
+
+        .grupp ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .grupp li {
+            margin: 3px 0;
+            font-size: 13px;
+        }
+
+        /* TOM STARTSIDA */
+
+        #tomStartsida {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 153px);
+            color: #64748b;
+            text-align: center;
+        }
+
+        #tomStartsida.visas {
+            display: flex;
+        }
+
+        #tomStartsida div {
+            padding: 35px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 18px;
+            background-color: white;
+        }
+
+        /* MAXIMERAT LÄGE */
+
+        .panel.maximerad #timercirkel {
+            width: min(52vh, 430px);
+            height: min(52vh, 430px);
+        }
+
+        .panel.maximerad #namnlista {
+            height: 25vh;
+        }
+
+        /* SMALA SKÄRMAR */
+
+        @media screen and (max-width: 950px) {
+            body {
+                overflow-y: auto;
+            }
+
+            .sidhuvud {
+                flex-wrap: wrap;
+            }
+
+            .verktygsmeny {
+                flex-wrap: wrap;
+            }
+
+            #dashboard,
+            #dashboard.ett-verktyg,
+            #dashboard.tva-verktyg,
+            #dashboard.tre-verktyg {
+                display: flex;
+                flex-direction: column;
+                height: auto;
+            }
+
+            .panel {
+                width: 100%;
+                min-height: 590px;
+            }
+
+            #whiteboardPanel {
+                min-height: 680px;
+            }
+        }
+
+        @media screen and (max-width: 560px) {
+            .panelhuvud {
+                align-items: flex-start;
+            }
+
+            .whiteboardkontroller {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+
+            .nytt-moment {
+                grid-template-columns: 1fr;
+            }
+
+            #laggTillMoment {
+                width: 100%;
+            }
+
+            .lektionsknappar {
+                flex-direction: column;
+            }
+        }
+
+        /* LÄGRE DATORSKÄRMAR */
+
+        @media screen and (min-width: 951px) and (max-height: 750px) {
+            .sidhuvud {
+                min-height: 78px;
+                padding: 7px 18px;
+            }
+
+            #klassnamn {
+                font-size: 30px;
+            }
+
+            .verktygsmeny {
+                min-height: 49px;
+                padding: 5px;
+            }
+
+            #dashboard {
+                height: calc(100vh - 127px);
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .panel {
+                padding: 10px;
+            }
+
+            .panelhuvud {
+                margin-bottom: 7px;
+            }
+
+            #timercirkel {
+                width: min(25vh, 185px);
+                height: min(25vh, 185px);
+                margin: 7px auto;
+            }
+
+            #namnlista {
+                height: 13vh;
+            }
+
+            .moment-rad {
+                min-height: 48px;
+                padding: 7px 9px;
+            }
+
+            .moment-checkbox {
+                width: 23px;
+                height: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="sidhuvud">
+        <div class="klassinformation">
+            <h1
+                id="klassnamn"
+                contenteditable="true"
+                spellcheck="false"
+            >Välkommen klass 5A!</h1>
+
+            <p class="klasshjalp">
+                Klicka på rubriken för att ändra klassnamn
+            </p>
+        </div>
+
+        <div class="digital-klocka">
+            <div id="aktuellTid">00:00:00</div>
+            <div class="klocktext">AKTUELL TID</div>
+        </div>
+    </header>
+
+    <nav class="verktygsmeny" aria-label="Välj synliga verktyg">
+        <button type="button" id="menyTimer" class="menyknapp aktiv">
+            ✓ Timer
+        </button>
+
+        <button type="button" id="menyWhiteboard" class="menyknapp aktiv">
+            ✓ Lektionsstruktur
+        </button>
+
+        <button type="button" id="menyGrupper" class="menyknapp aktiv">
+            ✓ Gruppgenerator
+        </button>
+
+        <button type="button" id="visaAlla" class="menyknapp">
+            Visa alla
+        </button>
+
+        <button type="button" id="doljAlla" class="menyknapp">
+            Dölj alla
+        </button>
+    </nav>
+
+    <main id="dashboard" class="tre-verktyg">
+
+        <!-- TIMER -->
+
+        <section id="timerPanel" class="panel">
+            <div class="panelhuvud">
+                <h2 class="panelrubrik">⌛ Timer</h2>
+
+                <div class="panelkontroller">
+                    <button
+                        type="button"
+                        class="panelknapp expandera"
+                        data-panel="timerPanel"
+                        title="Expandera timer"
+                    >⛶</button>
+
+                    <button
+                        type="button"
+                        class="panelknapp dolj"
+                        data-dolj="timer"
+                        title="Dölj timer"
+                    >×</button>
+                </div>
+            </div>
+
+            <div class="minutval">
+                <label for="minuter">Minuter:</label>
+
+                <input
+                    type="number"
+                    id="minuter"
+                    value="10"
+                    min="1"
+                    max="999"
+                >
+            </div>
+
+            <div id="timercirkel">
+                <div id="timercirkelMitten">
+                    <div id="tid">10:00</div>
+                    <div class="tidstext">kvar</div>
+                </div>
+            </div>
+
+            <div class="snabbknappar">
+                <button type="button" id="minusEn">−1 min</button>
+                <button type="button" id="plusEn">+1 min</button>
+                <button type="button" id="plusFem">+5 min</button>
+            </div>
+
+            <div class="timerknappar">
+                <button type="button" id="starta">
+                    STARTA
+                </button>
+
+                <button type="button" id="pausa" disabled>
+                    PAUSA
+                </button>
+
+                <button type="button" id="aterstall">
+                    ÅTERSTÄLL
+                </button>
+            </div>
+
+            <p id="timermeddelande"></p>
+        </section>
+
+        <!-- LEKTIONSSTRUKTUR -->
+
+        <section id="whiteboardPanel" class="panel">
+            <div class="panelhuvud">
+                <h2 class="panelrubrik">
+                    ☷ Lektionsstruktur
+                </h2>
+
+                <div class="whiteboardkontroller">
+                    <div class="sluttidsruta">
+                        <label for="sluttid">
+                            Sluttid:
+                        </label>
+
+                        <input
+                            type="text"
+                            id="sluttid"
+                            placeholder="14:50"
+                            maxlength="5"
+                            inputmode="numeric"
+                        >
+                    </div>
+
+                    <div class="panelkontroller">
+                        <button
+                            type="button"
+                            class="panelknapp expandera"
+                            data-panel="whiteboardPanel"
+                            title="Expandera lektionsstruktur"
+                        >⛶</button>
+
+                        <button
+                            type="button"
+                            class="panelknapp dolj"
+                            data-dolj="whiteboard"
+                            title="Dölj lektionsstruktur"
+                        >×</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nytt-moment">
+                <input
+                    type="text"
+                    id="nyttMoment"
+                    placeholder="Skriv ett nytt lektionsmoment"
+                    maxlength="100"
+                    autocomplete="off"
+                >
+
+                <button type="button" id="laggTillMoment">
+                    + Lägg till
+                </button>
+            </div>
+
+            <p class="momenthjalp">
+                Skriv en rubrik och tryck på Enter eller Lägg till.
+            </p>
+
+            <div
+                id="lektionsmoment"
+                aria-live="polite"
+            ></div>
+
+            <div class="lektionsknappar">
+                <button type="button" id="avmarkeraMoment">
+                    Avmarkera alla
+                </button>
+
+                <button type="button" id="rensaMoment">
+                    Rensa alla
+                </button>
+            </div>
+        </section>
+
+        <!-- GRUPPGENERATOR -->
+
+        <section id="gruppPanel" class="panel">
+            <div class="panelhuvud">
+                <h2 class="panelrubrik">
+                    👥 Slumpa grupper
+                </h2>
+
+                <div class="panelkontroller">
+                    <button
+                        type="button"
+                        class="panelknapp expandera"
+                        data-panel="gruppPanel"
+                        title="Expandera gruppgenerator"
+                    >⛶</button>
+
+                    <button
+                        type="button"
+                        class="panelknapp dolj"
+                        data-dolj="grupper"
+                        title="Dölj gruppgenerator"
+                    >×</button>
+                </div>
+            </div>
+
+            <textarea
+                id="namnlista"
+                aria-label="Namnlista"
+                placeholder="Skriv eller klistra in namn.
+
+Ett namn per rad eller separera med kommatecken."
+            ></textarea>
+
+            <div class="gruppval">
+                <label class="radioval">
+                    <input
+                        type="radio"
+                        name="grupptyp"
+                        value="antalGrupper"
+                        checked
+                    >
+                    Välj antal grupper
+                </label>
+
+                <label class="radioval">
+                    <input
+                        type="radio"
+                        name="grupptyp"
+                        value="eleverPerGrupp"
+                    >
+                    Välj antal elever per grupp
+                </label>
+
+                <div class="antalrad">
+                    <label for="gruppantal">
+                        Antal:
+                    </label>
+
+                    <input
+                        type="number"
+                        id="gruppantal"
+                        value="3"
+                        min="1"
+                    >
+                </div>
+            </div>
+
+            <button type="button" id="slumpa">
+                SLUMPA GRUPPER
+            </button>
+
+            <p id="gruppmeddelande"></p>
+
+            <div id="gruppresultat"></div>
+        </section>
+
+    </main>
+
+    <section id="tomStartsida">
+        <div>
+            <h2>Inga verktyg visas</h2>
+
+            <p>
+                Välj ett verktyg i menyn ovan.
+            </p>
+        </div>
+    </section>
+
+    <script>
+        /*
+         * DIGITAL KLOCKA
+         */
+
+        var aktuellTid =
+            document.getElementById("aktuellTid");
+
+        function uppdateraKlockan() {
+            var nu = new Date();
+
+            aktuellTid.textContent =
+                String(nu.getHours()).padStart(2, "0") +
+                ":" +
+                String(nu.getMinutes()).padStart(2, "0") +
+                ":" +
+                String(nu.getSeconds()).padStart(2, "0");
+        }
+
+        uppdateraKlockan();
+
+        window.setInterval(
+            uppdateraKlockan,
+            1000
+        );
+
+        /*
+         * KLASSNAMN
+         */
+
+        var klassnamn =
+            document.getElementById("klassnamn");
+
+        var sparatKlassnamn =
+            localStorage.getItem("klassnamn");
+
+        if (sparatKlassnamn) {
+            klassnamn.textContent = sparatKlassnamn;
+        }
+
+        klassnamn.addEventListener(
+            "input",
+            function () {
+                localStorage.setItem(
+                    "klassnamn",
+                    klassnamn.textContent
+                );
+            }
+        );
+
+        /*
+         * VISA, DÖLJ OCH EXPANDERA
+         */
+
+        var dashboard =
+            document.getElementById("dashboard");
+
+        var tomStartsida =
+            document.getElementById("tomStartsida");
+
+        var paneler = {
+            timer: document.getElementById("timerPanel"),
+            whiteboard: document.getElementById("whiteboardPanel"),
+            grupper: document.getElementById("gruppPanel")
+        };
+
+        var menyknappar = {
+            timer: document.getElementById("menyTimer"),
+            whiteboard: document.getElementById("menyWhiteboard"),
+            grupper: document.getElementById("menyGrupper")
+        };
+
+        var etiketter = {
+            timer: "Timer",
+            whiteboard: "Lektionsstruktur",
+            grupper: "Gruppgenerator"
+        };
+
+        var synlighet = {
+            timer: true,
+            whiteboard: true,
+            grupper: true
+        };
+
+        function hamtaSparadSynlighet() {
+            try {
+                var sparad =
+                    localStorage.getItem("verktygSynlighet");
+
+                if (sparad) {
+                    var resultat =
+                        JSON.parse(sparad);
+
+                    synlighet.timer =
+                        resultat.timer !== false;
+
+                    synlighet.whiteboard =
+                        resultat.whiteboard !== false;
+
+                    synlighet.grupper =
+                        resultat.grupper !== false;
+                }
+            } catch (fel) {
+                synlighet = {
+                    timer: true,
+                    whiteboard: true,
+                    grupper: true
+                };
+            }
+        }
+
+        function sparaSynlighet() {
+            localStorage.setItem(
+                "verktygSynlighet",
+                JSON.stringify(synlighet)
+            );
+        }
+
+        function stangMaximering() {
+            var maximerad =
+                document.querySelector(
+                    ".panel.maximerad"
+                );
+
+            if (maximerad) {
+                maximerad.classList.remove(
+                    "maximerad"
+                );
+
+                var knapp =
+                    maximerad.querySelector(
+                        ".expandera"
+                    );
+
+                if (knapp) {
+                    knapp.textContent = "⛶";
+                    knapp.title = "Expandera";
+                }
+            }
+
+            document.body.classList.remove(
+                "har-maximerad"
+            );
+        }
+
+        function uppdateraLayout() {
+            stangMaximering();
+
+            var antalSynliga = 0;
+
+            Object.keys(paneler).forEach(
+                function (namn) {
+                    var visas = synlighet[namn];
+
+                    paneler[namn].classList.toggle(
+                        "dold",
+                        !visas
+                    );
+
+                    menyknappar[namn].classList.toggle(
+                        "aktiv",
+                        visas
+                    );
+
+                    menyknappar[namn].textContent =
+                        (visas ? "✓ " : "") +
+                        etiketter[namn];
+
+                    if (visas) {
+                        antalSynliga++;
+                    }
+                }
+            );
+
+            dashboard.classList.remove(
+                "ett-verktyg",
+                "tva-verktyg",
+                "tre-verktyg"
+            );
+
+            if (antalSynliga === 1) {
+                dashboard.classList.add(
+                    "ett-verktyg"
+                );
+            }
+
+            if (antalSynliga === 2) {
+                dashboard.classList.add(
+                    "tva-verktyg"
+                );
+            }
+
+            if (antalSynliga === 3) {
+                dashboard.classList.add(
+                    "tre-verktyg"
+                );
+            }
+
+            dashboard.style.display =
+                antalSynliga === 0
+                    ? "none"
+                    : "grid";
+
+            tomStartsida.classList.toggle(
+                "visas",
+                antalSynliga === 0
+            );
+
+            sparaSynlighet();
+        }
+
+        Object.keys(menyknappar).forEach(
+            function (namn) {
+                menyknappar[namn].addEventListener(
+                    "click",
+                    function () {
+                        synlighet[namn] =
+                            !synlighet[namn];
+
+                        uppdateraLayout();
+                    }
+                );
+            }
+        );
+
+        document
+            .getElementById("visaAlla")
+            .addEventListener(
+                "click",
+                function () {
+                    synlighet.timer = true;
+                    synlighet.whiteboard = true;
+                    synlighet.grupper = true;
+
+                    uppdateraLayout();
+                }
+            );
+
+        document
+            .getElementById("doljAlla")
+            .addEventListener(
+                "click",
+                function () {
+                    synlighet.timer = false;
+                    synlighet.whiteboard = false;
+                    synlighet.grupper = false;
+
+                    uppdateraLayout();
+                }
+            );
+
+        document
+            .querySelectorAll("[data-dolj]")
+            .forEach(function (knapp) {
+                knapp.addEventListener(
+                    "click",
+                    function () {
+                        var namn =
+                            knapp.getAttribute(
+                                "data-dolj"
+                            );
+
+                        synlighet[namn] = false;
+                        uppdateraLayout();
+                    }
+                );
+            });
+
+        document
+            .querySelectorAll(".expandera")
+            .forEach(function (knapp) {
+                knapp.addEventListener(
+                    "click",
+                    function () {
+                        var panelId =
+                            knapp.getAttribute(
+                                "data-panel"
+                            );
+
+                        var panel =
+                            document.getElementById(
+                                panelId
+                            );
+
+                        var redanMaximerad =
+                            panel.classList.contains(
+                                "maximerad"
+                            );
+
+                        stangMaximering();
+
+                        if (!redanMaximerad) {
+                            panel.classList.add(
+                                "maximerad"
+                            );
+
+                            document.body.classList.add(
+                                "har-maximerad"
+                            );
+
+                            knapp.textContent = "↙";
+                            knapp.title =
+                                "Återgå till normal storlek";
+                        }
+                    }
+                );
+            });
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+                if (event.key === "Escape") {
+                    stangMaximering();
+                }
+            }
+        );
+
+        hamtaSparadSynlighet();
+        uppdateraLayout();
+
+        /*
+         * TIMER
+         */
+
+        var minutFalt =
+            document.getElementById("minuter");
+
+        var timercirkel =
+            document.getElementById("timercirkel");
+
+        var tidRuta =
+            document.getElementById("tid");
+
+        var startKnapp =
+            document.getElementById("starta");
+
+        var pausKnapp =
+            document.getElementById("pausa");
+
+        var aterstallKnapp =
+            document.getElementById("aterstall");
+
+        var timermeddelande =
+            document.getElementById(
+                "timermeddelande"
+            );
+
+        var totalTid = 10 * 60;
+        var sekunderKvar = totalTid;
+        var timerId = null;
+        var timerHarStartat = false;
+
+        function visaTidOchCirkel() {
+            var minuterKvar =
+                Math.floor(sekunderKvar / 60);
+
+            var sekunder =
+                sekunderKvar % 60;
+
+            tidRuta.textContent =
+                String(minuterKvar).padStart(2, "0") +
+                ":" +
+                String(sekunder).padStart(2, "0");
+
+            var andelKvar =
+                totalTid > 0
+                    ? sekunderKvar / totalTid
+                    : 0;
+
+            andelKvar =
+                Math.max(
+                    0,
+                    Math.min(1, andelKvar)
+                );
+
+            var rodaGrader =
+                andelKvar * 360;
+
+            timercirkel.style.background =
+                "conic-gradient(" +
+                "#ef4444 0deg, " +
+                "#ef4444 " +
+                rodaGrader +
+                "deg, " +
+                "#ffffff " +
+                rodaGrader +
+                "deg, " +
+                "#ffffff 360deg)";
+        }
+
+        function lasMinuter() {
+            var valdaMinuter =
+                Math.floor(
+                    Number(minutFalt.value)
+                );
+
+            if (
+                isNaN(valdaMinuter) ||
+                valdaMinuter < 1
+            ) {
+                valdaMinuter = 1;
+                minutFalt.value = 1;
+            }
+
+            return valdaMinuter;
+        }
+
+        function startaTimer() {
+            if (timerId !== null) {
+                return;
+            }
+
+            if (
+                !timerHarStartat ||
+                sekunderKvar <= 0
+            ) {
+                totalTid = lasMinuter() * 60;
+                sekunderKvar = totalTid;
+            }
+
+            timerHarStartat = true;
+            minutFalt.disabled = true;
+            startKnapp.disabled = true;
+            pausKnapp.disabled = false;
+
+            timermeddelande.textContent =
+                "Tiden räknas ned";
+
+            timerId = window.setInterval(
+                function () {
+                    sekunderKvar--;
+
+                    if (sekunderKvar <= 0) {
+                        sekunderKvar = 0;
+
+                        window.clearInterval(
+                            timerId
+                        );
+
+                        timerId = null;
+                        timerHarStartat = false;
+
+                        minutFalt.disabled = false;
+                        startKnapp.disabled = false;
+                        pausKnapp.disabled = true;
+
+                        startKnapp.textContent =
+                            "STARTA IGEN";
+
+                        timermeddelande.textContent =
+                            "Tiden är slut!";
+                    }
+
+                    visaTidOchCirkel();
+                },
+                1000
+            );
+        }
+
+        function pausaTimer() {
+            if (timerId === null) {
+                return;
+            }
+
+            window.clearInterval(timerId);
+            timerId = null;
+
+            startKnapp.disabled = false;
+            pausKnapp.disabled = true;
+            startKnapp.textContent = "FORTSÄTT";
+
+            timermeddelande.textContent =
+                "Timern är pausad";
+        }
+
+        function aterstallTimer() {
+            window.clearInterval(timerId);
+
+            timerId = null;
+            timerHarStartat = false;
+
+            totalTid = lasMinuter() * 60;
+            sekunderKvar = totalTid;
+
+            minutFalt.disabled = false;
+            startKnapp.disabled = false;
+            pausKnapp.disabled = true;
+            startKnapp.textContent = "STARTA";
+            timermeddelande.textContent = "";
+
+            visaTidOchCirkel();
+        }
+
+        function andraMinuter(antal) {
+            if (
+                timerId !== null ||
+                timerHarStartat
+            ) {
+                return;
+            }
+
+            var nyttAntal =
+                Math.max(
+                    1,
+                    lasMinuter() + antal
+                );
+
+            minutFalt.value = nyttAntal;
+            totalTid = nyttAntal * 60;
+            sekunderKvar = totalTid;
+
+            visaTidOchCirkel();
+        }
+
+        startKnapp.addEventListener(
+            "click",
+            startaTimer
+        );
+
+        pausKnapp.addEventListener(
+            "click",
+            pausaTimer
+        );
+
+        aterstallKnapp.addEventListener(
+            "click",
+            aterstallTimer
+        );
+
+        document
+            .getElementById("minusEn")
+            .addEventListener(
+                "click",
+                function () {
+                    andraMinuter(-1);
+                }
+            );
+
+        document
+            .getElementById("plusEn")
+            .addEventListener(
+                "click",
+                function () {
+                    andraMinuter(1);
+                }
+            );
+
+        document
+            .getElementById("plusFem")
+            .addEventListener(
+                "click",
+                function () {
+                    andraMinuter(5);
+                }
+            );
+
+        minutFalt.addEventListener(
+            "input",
+            function () {
+                if (
+                    timerId !== null ||
+                    timerHarStartat
+                ) {
+                    return;
+                }
+
+                totalTid = lasMinuter() * 60;
+                sekunderKvar = totalTid;
+
+                visaTidOchCirkel();
+            }
+        );
+
+        visaTidOchCirkel();
+
+        /*
+         * LEKTIONSSTRUKTUR
+         */
+
+        var sluttid =
+            document.getElementById("sluttid");
+
+        var nyttMomentFalt =
+            document.getElementById(
+                "nyttMoment"
+            );
+
+        var laggTillMomentKnapp =
+            document.getElementById(
+                "laggTillMoment"
+            );
+
+        var lektionsmomentRuta =
+            document.getElementById(
+                "lektionsmoment"
+            );
+
+        var avmarkeraMomentKnapp =
+            document.getElementById(
+                "avmarkeraMoment"
+            );
+
+        var rensaMomentKnapp =
+            document.getElementById(
+                "rensaMoment"
+            );
+
+        var momentLista = [];
+
+        function hamtaSparadeMoment() {
+            try {
+                var sparadeMoment =
+                    localStorage.getItem(
+                        "lektionsmoment"
+                    );
+
+                if (sparadeMoment) {
+                    var tolkadeMoment =
+                        JSON.parse(sparadeMoment);
+
+                    if (
+                        Array.isArray(
+                            tolkadeMoment
+                        )
+                    ) {
+                        momentLista =
+                            tolkadeMoment;
+                    }
+                }
+            } catch (fel) {
+                momentLista = [];
+            }
+        }
+
+        function sparaMoment() {
+            localStorage.setItem(
+                "lektionsmoment",
+                JSON.stringify(momentLista)
+            );
+        }
+
+        function skapaMomentId() {
+            return (
+                Date.now().toString() +
+                "-" +
+                Math.random()
+                    .toString(16)
+                    .slice(2)
+            );
+        }
+
+        function visaMoment() {
+            lektionsmomentRuta.innerHTML = "";
+
+            if (momentLista.length === 0) {
+                var tomText =
+                    document.createElement(
+                        "div"
+                    );
+
+                tomText.className =
+                    "tom-momentlista";
+
+                tomText.textContent =
+                    "Inga lektionsmoment har lagts till ännu.";
+
+                lektionsmomentRuta.appendChild(
+                    tomText
+                );
+
+                return;
+            }
+
+            momentLista.forEach(
+                function (moment) {
+                    var momentRad =
+                        document.createElement(
+                            "div"
+                        );
+
+                    momentRad.className =
+                        "moment-rad" +
+                        (moment.klar
+                            ? " klar"
+                            : "");
+
+                    var checkbox =
+                        document.createElement(
+                            "input"
+                        );
+
+                    checkbox.type = "checkbox";
+
+                    checkbox.className =
+                        "moment-checkbox";
+
+                    checkbox.checked =
+                        moment.klar;
+
+                    checkbox.setAttribute(
+                        "aria-label",
+                        "Markera " +
+                            moment.text +
+                            " som klart"
+                    );
+
+                    var momentText =
+                        document.createElement(
+                            "span"
+                        );
+
+                    momentText.className =
+                        "moment-text";
+
+                    momentText.textContent =
+                        moment.text;
+
+                    momentText.tabIndex = 0;
+
+                    var taBortKnapp =
+                        document.createElement(
+                            "button"
+                        );
+
+                    taBortKnapp.type = "button";
+
+                    taBortKnapp.className =
+                        "ta-bort-moment";
+
+                    taBortKnapp.textContent = "×";
+
+                    taBortKnapp.title =
+                        "Ta bort momentet";
+
+                    function vaxlaMoment() {
+                        moment.klar =
+                            !moment.klar;
+
+                        sparaMoment();
+                        visaMoment();
+                    }
+
+                    checkbox.addEventListener(
+                        "change",
+                        function () {
+                            moment.klar =
+                                checkbox.checked;
+
+                            sparaMoment();
+                            visaMoment();
+                        }
+                    );
+
+                    momentText.addEventListener(
+                        "click",
+                        vaxlaMoment
+                    );
+
+                    momentText.addEventListener(
+                        "keydown",
+                        function (event) {
+                            if (
+                                event.key === "Enter" ||
+                                event.key === " "
+                            ) {
+                                event.preventDefault();
+                                vaxlaMoment();
+                            }
+                        }
+                    );
+
+                    taBortKnapp.addEventListener(
+                        "click",
+                        function () {
+                            momentLista =
+                                momentLista.filter(
+                                    function (
+                                        befintligtMoment
+                                    ) {
+                                        return (
+                                            befintligtMoment.id !==
+                                            moment.id
+                                        );
+                                    }
+                                );
+
+                            sparaMoment();
+                            visaMoment();
+                        }
+                    );
+
+                    momentRad.appendChild(
+                        checkbox
+                    );
+
+                    momentRad.appendChild(
+                        momentText
+                    );
+
+                    momentRad.appendChild(
+                        taBortKnapp
+                    );
+
+                    lektionsmomentRuta.appendChild(
+                        momentRad
+                    );
+                }
+            );
+        }
+
+        function laggTillMoment() {
+            var momentText =
+                nyttMomentFalt.value.trim();
+
+            if (momentText.length === 0) {
+                nyttMomentFalt.focus();
+                return;
+            }
+
+            momentLista.push({
+                id: skapaMomentId(),
+                text: momentText,
+                klar: false
+            });
+
+            nyttMomentFalt.value = "";
+
+            sparaMoment();
+            visaMoment();
+
+            nyttMomentFalt.focus();
+        }
+
+        laggTillMomentKnapp.addEventListener(
+            "click",
+            laggTillMoment
+        );
+
+        nyttMomentFalt.addEventListener(
+            "keydown",
+            function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    laggTillMoment();
+                }
+            }
+        );
+
+        avmarkeraMomentKnapp.addEventListener(
+            "click",
+            function () {
+                momentLista.forEach(
+                    function (moment) {
+                        moment.klar = false;
+                    }
+                );
+
+                sparaMoment();
+                visaMoment();
+            }
+        );
+
+        rensaMomentKnapp.addEventListener(
+            "click",
+            function () {
+                if (momentLista.length === 0) {
+                    return;
+                }
+
+                var skaRensas =
+                    window.confirm(
+                        "Vill du ta bort alla lektionsmoment?"
+                    );
+
+                if (skaRensas) {
+                    momentLista = [];
+
+                    localStorage.removeItem(
+                        "lektionsmoment"
+                    );
+
+                    visaMoment();
+                    nyttMomentFalt.focus();
+                }
+            }
+        );
+
+        var sparadSluttid =
+            localStorage.getItem(
+                "lektionSluttid"
+            );
+
+        if (sparadSluttid) {
+            sluttid.value = sparadSluttid;
+        }
+
+        sluttid.addEventListener(
+            "input",
+            function () {
+                var siffror =
+                    sluttid.value.replace(
+                        /[^0-9]/g,
+                        ""
+                    );
+
+                siffror = siffror.slice(0, 4);
+
+                if (siffror.length >= 3) {
+                    sluttid.value =
+                        siffror.slice(0, 2) +
+                        ":" +
+                        siffror.slice(2);
+                } else {
+                    sluttid.value =
+                        siffror;
+                }
+
+                localStorage.setItem(
+                    "lektionSluttid",
+                    sluttid.value
+                );
+            }
+        );
+
+        hamtaSparadeMoment();
+        visaMoment();
+
+        /*
+         * GRUPPGENERATOR
+         */
+
+        var namnlista =
+            document.getElementById(
+                "namnlista"
+            );
+
+        var gruppantal =
+            document.getElementById(
+                "gruppantal"
+            );
+
+        var gruppmeddelande =
+            document.getElementById(
+                "gruppmeddelande"
+            );
+
+        var gruppresultat =
+            document.getElementById(
+                "gruppresultat"
+            );
+
+        function hamtaNamn() {
+            return namnlista.value
+                .split(/[\n,;]+/)
+                .map(function (namn) {
+                    return namn.trim();
+                })
+                .filter(function (namn) {
+                    return namn.length > 0;
+                });
+        }
+
+        function blandaLista(lista) {
+            var blandad = lista.slice();
+
+            for (
+                var i = blandad.length - 1;
+                i > 0;
+                i--
+            ) {
+                var slumpIndex =
+                    Math.floor(
+                        Math.random() *
+                            (i + 1)
+                    );
+
+                var tillfalligt =
+                    blandad[i];
+
+                blandad[i] =
+                    blandad[slumpIndex];
+
+                blandad[slumpIndex] =
+                    tillfalligt;
+            }
+
+            return blandad;
+        }
+
+        function slumpaGrupper() {
+            var namn = hamtaNamn();
+
+            var valtAntal =
+                Math.floor(
+                    Number(
+                        gruppantal.value
+                    )
+                );
+
+            var valtAlternativ =
+                document.querySelector(
+                    'input[name="grupptyp"]:checked'
+                ).value;
+
+            gruppresultat.innerHTML = "";
+            gruppmeddelande.textContent = "";
+
+            if (namn.length < 2) {
+                gruppmeddelande.textContent =
+                    "Skriv in minst två namn.";
+
+                namnlista.focus();
+                return;
+            }
+
+            if (
+                isNaN(valtAntal) ||
+                valtAntal < 1
+            ) {
+                gruppmeddelande.textContent =
+                    "Välj ett antal som är minst 1.";
+
+                gruppantal.focus();
+                return;
+            }
+
+            var antalGrupper;
+
+            if (
+                valtAlternativ ===
+                "antalGrupper"
+            ) {
+                antalGrupper =
+                    Math.min(
+                        valtAntal,
+                        namn.length
+                    );
+            } else {
+                antalGrupper =
+                    Math.ceil(
+                        namn.length /
+                            valtAntal
+                    );
+            }
+
+            var blandadeNamn =
+                blandaLista(namn);
+
+            var grupper = [];
+
+            for (
+                var gruppnummer = 0;
+                gruppnummer < antalGrupper;
+                gruppnummer++
+            ) {
+                grupper.push([]);
+            }
+
+            for (
+                var elevnummer = 0;
+                elevnummer <
+                blandadeNamn.length;
+                elevnummer++
+            ) {
+                var gruppIndex =
+                    elevnummer %
+                    antalGrupper;
+
+                grupper[
+                    gruppIndex
+                ].push(
+                    blandadeNamn[
+                        elevnummer
+                    ]
+                );
+            }
+
+            visaGrupper(grupper);
+
+            gruppmeddelande.textContent =
+                namn.length +
+                " elever fördelade i " +
+                antalGrupper +
+                " grupper";
+        }
+
+        function visaGrupper(grupper) {
+            gruppresultat.innerHTML = "";
+
+            grupper.forEach(
+                function (grupp, index) {
+                    var gruppruta =
+                        document.createElement(
+                            "section"
+                        );
+
+                    gruppruta.className =
+                        "grupp";
+
+                    var rubrik =
+                        document.createElement(
+                            "h3"
+                        );
+
+                    rubrik.textContent =
+                        "Grupp " +
+                        (index + 1) +
+                        " (" +
+                        grupp.length +
+                        ")";
+
+                    var lista =
+                        document.createElement(
+                            "ul"
+                        );
+
+                    grupp.forEach(
+                        function (namn) {
+                            var listpunkt =
+                                document.createElement(
+                                    "li"
+                                );
+
+                            listpunkt.textContent =
+                                namn;
+
+                            lista.appendChild(
+                                listpunkt
+                            );
+                        }
+                    );
+
+                    gruppruta.appendChild(
+                        rubrik
+                    );
+
+                    gruppruta.appendChild(
+                        lista
+                    );
+
+                    gruppresultat.appendChild(
+                        gruppruta
+                    );
+                }
+            );
+        }
+
+        document
+            .getElementById("slumpa")
+            .addEventListener(
+                "click",
+                slumpaGrupper
+            );
+    </script>
+
+</body>
+</html>
